@@ -64,7 +64,7 @@ let
 
     diagrams-svg = overrideCabal su.diagrams-svg (drv: {
       version = "1.4.2";
-      src = ../diagrams-svg;
+      src = /home/bdoyle/diagrams-svg;
       # nixpkgs.fetchFromGitHub {
       #   owner = "zopa";
       #   repo = "diagrams-svg";
