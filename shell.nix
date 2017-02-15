@@ -5,15 +5,17 @@ let
 
   inherit (nixpkgs) pkgs;
 
+  src = /home/bdoyle/diagrams-svgdom;
+
   f = { mkDerivation, base, base64-bytestring, bytestring, colour, containers,
       diagrams-core, diagrams-lib, diagrams-svg, filepath, ghcjs-dom, hashable,
       JuicyPixels, lens, monoid-extras, mtl, optparse-applicative, semigroups,
       split, stdenv, svg-builder, text
       }:
       mkDerivation {
-        pname = "diagrams-svg";
-        version = "1.4.1";
-        src = ./.;
+        inherit src;
+        pname = "diagrams-svgdom";
+        version = "0.1";
         libraryHaskellDepends = [
           base base64-bytestring bytestring colour containers diagrams-core
           diagrams-lib diagrams-svg filepath ghcjs-dom hashable JuicyPixels lens

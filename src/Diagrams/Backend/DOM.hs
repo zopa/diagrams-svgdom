@@ -32,7 +32,7 @@
 
 -- TODO: Docs...
 
-module Diagrams.Backend.DomSVG
+module Diagrams.Backend.DOM
   ( renderDom
   ) where
 
@@ -52,10 +52,8 @@ import           Diagrams.Core.Compile
 -- from diagrams-lib
 import           Diagrams.Prelude         hiding (Attribute, size, view, local)
 
--- from svg-builder
-import           Graphics.Svg             (tag2text)
-
--- from diagrams-svg package
+-- from this package
+import           Graphics.Svg.Abstract.Attributes (tag2text)
 import           Diagrams.Backend.AbstractSVG hiding (B)
 import           Graphics.Svg.Abstract.Elements (Tag)
 import qualified Graphics.Svg.Abstract.Elements as E
