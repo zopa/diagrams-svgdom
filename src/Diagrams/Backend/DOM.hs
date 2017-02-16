@@ -53,7 +53,7 @@ import           Diagrams.Core.Compile
 import           Diagrams.Prelude         hiding (Attribute, size, view, local)
 
 -- from this package
-import           Graphics.Svg.Abstract.Attributes (tag2text)
+import           Graphics.Svg.Attributes (tag2text)
 import           Diagrams.Backend.AbstractSVG hiding (B)
 import           Graphics.Svg.Abstract.Elements (Tag)
 import qualified Graphics.Svg.Abstract.Elements as E
