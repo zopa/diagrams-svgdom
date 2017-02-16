@@ -5,20 +5,18 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  src = /home/bdoyle/diagrams-svgdom;
-
   f = { mkDerivation, base, base64-bytestring, bytestring, colour, containers,
-      diagrams-core, diagrams-lib, diagrams-svg, filepath, ghcjs-dom, hashable,
+      diagrams-core, diagrams-lib, filepath, ghcjs-dom, hashable,
       JuicyPixels, lens, monoid-extras, mtl, optparse-applicative, semigroups,
       split, stdenv, svg-builder, text
       }:
       mkDerivation {
-        inherit src;
+        src = ./.;
         pname = "diagrams-svgdom";
         version = "0.1";
         libraryHaskellDepends = [
           base base64-bytestring bytestring colour containers diagrams-core
-          diagrams-lib diagrams-svg filepath ghcjs-dom hashable JuicyPixels lens
+          diagrams-lib filepath ghcjs-dom hashable JuicyPixels lens
           monoid-extras mtl optparse-applicative semigroups split svg-builder
           text
         ];
@@ -40,8 +38,8 @@ let
   svg-builder = nixpkgs.fetchFromGitHub {
     owner = "zopa";
     repo = "svg-builder";
-    rev = "ff6d6c4a1f362c39d18688538edc9baab9409477";
-    sha256 = "056h90xqcxkymi27s7zg6b9ffr2j8pljh1lbwbizclxrxalxwvfm";
+    rev = "e61d387d2ea0f00ffe326c75dbd2521244e9876a";
+    sha256 = "0vg755m753x561wjnjzr5fvj0zs764x3adjcjw9lqbqclkkv6y41";
   };
 
   addDepends = drv: xs:
@@ -62,16 +60,6 @@ let
       sha256  = "1rrak6vym0q1c00cvhdlh29z8vsr6w81lq1xa9b61f5d7m42yl75";
     });
 
-    diagrams-svg = overrideCabal su.diagrams-svg (drv: {
-      version = "1.4.2";
-      src = /home/bdoyle/diagrams-svg;
-      # nixpkgs.fetchFromGitHub {
-      #   owner = "zopa";
-      #   repo = "diagrams-svg";
-      #   rev = "a1036414de65ddaf1196661c48f4eb8fa903396b";
-      #   sha256 = "1ijhnvpaid04rjam4plwv1ikg1v3n8cf63rz2zkr1fsjzbn2yhpn";
-      # };
-    });
     svg-builder = overrideCabal su.svg-builder (drv: {
       src = svg-builder;
     });
