@@ -5,20 +5,20 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, base, base64-bytestring, bytestring, colour, containers,
-      diagrams-core, diagrams-lib, filepath, ghcjs-dom, hashable,
-      JuicyPixels, lens, monoid-extras, mtl, optparse-applicative, semigroups,
-      split, stdenv, svg-builder, text
+  f = { mkDerivation, base, base64-bytestring, bytestring, cereal, cereal-text,
+      colour, containers, diagrams-core, diagrams-lib, filepath, ghcjs-dom,
+      hashable, JuicyPixels, lens, monoid-extras, mtl, optparse-applicative,
+      semigroups, split, stdenv, svg-builder, text
       }:
       mkDerivation {
         src = ./.;
         pname = "diagrams-svgdom";
         version = "0.1";
         libraryHaskellDepends = [
-          base base64-bytestring bytestring colour containers diagrams-core
-          diagrams-lib filepath ghcjs-dom hashable JuicyPixels lens
-          monoid-extras mtl optparse-applicative semigroups split svg-builder
-          text
+          base base64-bytestring bytestring cereal cereal-text colour containers
+          diagrams-core diagrams-lib filepath ghcjs-dom hashable JuicyPixels
+          lens monoid-extras mtl optparse-applicative semigroups split
+          svg-builder text
         ];
         homepage = "http://projects.haskell.org/diagrams/";
         description = "SVG backend for diagrams drawing EDSL";

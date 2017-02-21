@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts  #-}
 
@@ -34,14 +37,18 @@ where
 
 -- import Graphics.Svg.Core
 import Graphics.Svg.Attributes
+import GHC.Generics
+import Data.Hashable
+import Data.Serialize
+import Data.Serialize.Text ()
 import Data.Text
-import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict (HashMap, toList, fromList)
 
 
 type Attributes = HashMap AttrTag [Text]
 
 data Element = El Tag Attributes
-  deriving (Show)
+  deriving (Show,Generic)
 
 data Tag = Svg11 -- svg tag with version 1.1 namespace attributes
          | A
@@ -124,8 +131,16 @@ data Tag = Svg11 -- svg tag with version 1.1 namespace attributes
          | Use
          | View
          | Vkern
-         deriving (Eq, Show)
+         deriving (Eq, Show, Generic)
 
+instance Serialize Tag
+instance (Serialize k, Serialize v, Eq k, Hashable k) => Serialize (HashMap k v) where
+  put = put . toList
+  get = fmap fromList get
+
+deriving instance Generic AttrTag
+instance Serialize AttrTag
+instance Serialize Element
 -- -- Gives the contents of the tag, but not the angle brackets
 -- svgtext :: Tag -> Text
 -- svgtext (Svg11) = "svg"
