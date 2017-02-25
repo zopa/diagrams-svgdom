@@ -86,8 +86,9 @@ domSvg (E.El t attrs) = do
     tagString E.RadialGradient = "radialGradient"
     tagString E.Path           = "path"
     tagString E.Stop           = "stop"
+    tagString E.Svg11          = "svg"
     tagString (E.Text _)       = "text"
-    tagString _                = error "Not yet implemented"
+    tagString e               = error $ "Not yet implemented" ++ (show e)
 
     setAttribute' e a vs = setAttribute e (tag2text a) (T.intercalate " " vs)
 
