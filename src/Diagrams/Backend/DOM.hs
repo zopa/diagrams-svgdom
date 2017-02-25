@@ -34,6 +34,7 @@
 
 module Diagrams.Backend.DOM
   ( renderDom
+  , createTree
   ) where
 
 import qualified Data.Text                as T
