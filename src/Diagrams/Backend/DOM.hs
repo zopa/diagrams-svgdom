@@ -16,6 +16,7 @@
 {-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE NondecreasingIndentation   #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE OverloadedLists            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TemplateHaskell            #-}
@@ -36,6 +37,7 @@ module Diagrams.Backend.DOM
   ( renderDom
   ) where
 
+import           Data.Map                 (Map)
 import qualified Data.Text                as T
 import           Data.Tree                (Tree)
 import qualified Data.Tree                as T
@@ -67,14 +69,25 @@ import           GHCJS.DOM.Types hiding (Text)
 domSvg :: (MonadJSM m, IsDocument d) => E.Element -> ReaderT d m Node
 domSvg (E.El t attrs) = do
     d <- ask
-    e <- lift . createElementUnsafe d . Just $ tagString t
+    e <- lift $ createElem d t
     itraverse_ (setAttribute' e) attrs
+    itraverse_ (setAttribute e) attrs'
     case t of
       E.Text txt -> do
         tn <- createTextNode d txt
         lift (appendChildUnsafe e tn)
       _ -> return . toNode $ e
   where
+    ns :: JSString
+    ns = "http://www.w3.org/2000/svg"
+
+    createElem d = createElementNSUnsafe d (Just ns) . Just . tagString
+
+    attrs' :: Map JSString JSString
+    attrs' = case t of
+      E.Svg11 -> [("xmlns", "http://www.w3.org/2000/svg"), ("version","1.1")]
+      _ -> []
+
     tagString :: Tag -> JSString
     tagString E.A              = "a"
     tagString E.ClipPath       = "clipPath"
@@ -87,7 +100,7 @@ domSvg (E.El t attrs) = do
     tagString E.Stop           = "stop"
     tagString E.Svg11          = "svg"
     tagString (E.Text _)       = "text"
-    tagString e               = error $ "Not yet implemented" ++ (show e)
+    tagString e                = error $ "Not yet implemented" ++ (show e)
 
     setAttribute' e a vs = setAttribute e (tag2text a) (T.intercalate " " vs)
 
