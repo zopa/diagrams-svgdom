@@ -42,6 +42,7 @@ module Graphics.Rendering.AbstractSVG
     ) where
 
 -- from base
+import qualified Debug.Trace as Dbg
 import           Data.List                   (intercalate)
 #if __GLASGOW_HASKELL__ < 710
 import           Data.Foldable               (foldMap)
@@ -245,7 +246,7 @@ renderFillTextureDefs i s =
 -- Render the gradient using the id set up in renderFillTextureDefs.
 renderFillTexture :: SVGFloat n => Int -> Style v n -> [(AttrTag,[AttributeValue])]
 renderFillTexture ident s = case getNumAttr getFillTexture s of
-  Just (SC (SomeColor c)) -> renderTextAttr Fill_ fillColorRgb <>
+  Just (SC (SomeColor c)) -> Dbg.trace ("set color " ++ show fillColorRgb) (renderTextAttr Fill_ fillColorRgb) <>
                              renderAttr Fill_opacity_ fillColorOpacity
     where
       fillColorRgb     = Just $ colorToRgbText c
