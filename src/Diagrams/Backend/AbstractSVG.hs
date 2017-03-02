@@ -37,7 +37,7 @@ module Diagrams.Backend.AbstractSVG
   ( AbSVG(..) -- rendering token
   , Render(..)
   , B
-  -- , Environment
+  , Environment
     -- for rendering options specific to SVG
   , Options(..), sizeSpec, svgDefinitions, idPrefix, svgAttributes
   , SVGFloat
@@ -46,15 +46,11 @@ module Diagrams.Backend.AbstractSVG
 
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import           Data.Foldable            as F (foldMap)
-#endif
-import qualified Debug.Trace as Dbg
 import qualified Data.Text                as T
 import           Data.Tree
 
 -- from base
--- import           Control.Monad.Reader
+import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.Typeable
 
@@ -109,36 +105,33 @@ instance Show (RNode b v n a) where
   show REmpty = "REmpty"
   show (RStyle s) = "RStyle " ++ show s
 
--- data Environment n = Environment
---   { _style :: Style V2 n
---   , __pre :: T.Text
---   }
+data Environment n = Environment
+  { _style :: Style V2 n
+  , __pre :: T.Text
+  }
 
--- makeLenses ''Environment
+makeLenses ''Environment
 
-data SvgRenderState n = SvgRenderState
+data SvgRenderState = SvgRenderState
   { _clipPathId :: Int
   , _fillGradId :: Int
   , _lineGradId :: Int
-  , _style      :: Style V2 n
-  , __pre       :: T.Text
   }
 
 makeLenses ''SvgRenderState
 
--- initialEnvironment :: SVGFloat n => T.Text -> Environment n
--- initialEnvironment = Environment (mempty # recommendFillColor transparent)
+initialEnvironment :: SVGFloat n => T.Text -> Environment n
+initialEnvironment = Environment (mempty # recommendFillColor transparent)
+
 -- -- Fill gradients ids are even, line gradient ids are odd.
-initialSvgRenderState :: (Typeable n, Floating n) => T.Text -> SvgRenderState n
-initialSvgRenderState = SvgRenderState 0 0 1 (mempty # recommendFillColor transparent)
+initialSvgRenderState :: SvgRenderState
+initialSvgRenderState = SvgRenderState 0 0 1
 
 -- | Monad to keep track of environment and state when rendering an SVG.
-type SvgRenderM n = -- ReaderT (Environment n) (State SvgRenderState)
-                    State (SvgRenderState n)
+type SvgRenderM n = ReaderT (Environment n) (State SvgRenderState)
 
 runRenderM :: SVGFloat n => T.Text -> SvgRenderM n a -> a
-runRenderM o = flip evalState $ initialSvgRenderState o
-               -- $ runReaderT  s (initialEnvironment o)
+runRenderM o s = flip evalState initialSvgRenderState $ runReaderT  s (initialEnvironment o)
 
 -- Handle clip attributes.
 --
@@ -190,7 +183,7 @@ instance SVGFloat n => Backend AbSVG V2 n where
     }
 
   renderRTree :: AbSVG -> Options AbSVG V2 n -> RTree AbSVG V2 n Annotation -> Result AbSVG V2 n
-  renderRTree _ opts rt = Dbg.traceShow rt $ runRenderM (opts ^.idPrefix) svgOutput
+  renderRTree _ opts rt = runRenderM (opts ^.idPrefix) svgOutput
     where
       svgOutput :: SvgRenderM n (Tree Element)
       svgOutput = do
@@ -205,58 +198,15 @@ instance SVGFloat n => Backend AbSVG V2 n where
   adjustDia c opts d = ( sz, t <> reflectionY, d' ) where
     (sz, t, d') = adjustDia2D sizeSpec c opts (d # reflectY)
 
--- We'd like to traverse the tree, generating svg elements from RNodes. But prim
--- nodes render to trees, not Elements, which means that rendering an RPrim node
--- changes the shape of the tree. So instead we leave a bud for each primitive
--- while traversing, and then grow the buds into subtrees. This is safe to do
--- because diagrams promises that RPrim nodes have no children, and so we can
--- substitute in whatever children render gives us.
-
--- Meanwhile, RStyle nodes don't create SVG; instead they alter the rendering
--- environment for child nodes. So they go to the left, too; as do REmpty nodes,
--- which are empty
-
 rtree :: forall n. Typeable n => RTree AbSVG V2 n Annotation -> SvgRenderM n [Tree Element]
-rtree = fmap budbreak' . traverse rnode
+rtree (Node n rs) = case n of
+    RPrim p                 -> pure <$> unR (render AbSVG p)
+    RStyle sty              -> local (style %~ (<> sty)) $ r
+    RAnnot (OpacityGroup o) -> pure . Node (g_ [(Opacity_,[toText o])]) <$> r
+    RAnnot (Href uri)       -> pure . Node (a_ [(XlinkHref_,[T.pack uri])]) <$> r
+    REmpty                  -> r
   where
-    rnode :: RNode AbSVG V2 n Annotation -> SvgRenderM n (Either (Maybe (Tree Element)) Element)
-    rnode (RPrim p) = Left . Just <$> unR (render AbSVG p)
-    rnode (RStyle sty) = (style %= (<> sty)) >> return (Left Nothing)
-    rnode (RAnnot (OpacityGroup o)) = return . Right $ g_ [(Opacity_,[toText o])]
-    rnode (RAnnot (Href uri)) = return . Right $ a_ [(XlinkHref_,[T.pack uri])]
-    rnode (REmpty) = return $ Left Nothing
-
-    budbreak :: a -> Forest (Either (Maybe (Tree a)) a) -> Forest a
-    budbreak e (Node (Right v)       ts : tss) = Node v (budbreak e ts) : budbreak e tss
-    budbreak e (Node (Left (Just t)) [] : tss) = t : budbreak e tss
-    budbreak _ (Node (Left (Just _)) _  : _)   = error "diagrams-svgdom: RPrim nodes shouldn't have children"
-    budbreak e (Node (Left Nothing)  [] : tss) = budbreak e tss
-    budbreak e (Node (Left Nothing)  ts : tss) = Node e (budbreak e ts) : budbreak e tss
-    budbreak _ []                              = []
-
-    budbreak' = budbreak (El G mempty) . pure
-
-    -- enstyle :: (MonadReader r m, Applicative f) =>
-    --            Tree (Either (r -> r) (f Element)) -> m (Tree (f Element))
-    -- enstyle (Node (Right v) ts) = (Node v) <$> cattrees ts
-    -- enstyle (Node (Left f) ts)  = local f $ Node (pure $ El G mempty) <$> (cattrees ts)
-
-    -- cattrees :: MonadReader r m => [Tree (Either (r -> r) a)] -> m [Tree a]
-    -- cattrees ((Node (Right v) ts):tss) = do
-    --   ts'  <- cattrees ts
-    --   tss' <- cattrees tss
-    --   return $ (Node v ts') : tss'
-    -- cattrees ((Node (Left f) ts):tss)  = do
-    --   ts'  <- local f $ cattrees ts
-    --   tss' <- cattrees tss
-    --   return $ ts' ++ tss'
-    -- cattrees [] = return []
-
--- rtree' :: forall n. Typeable n => RTree AbSVG V2 n Annotation -> Render AbSVG V2 n
--- rtree' (Node (RPrim p) []) = render AbSVG p
--- rtree' (Node (RStyle sty) ts) = R . local (style %~ (<> sty)) $ Node (El G mempty) <$> traverse (unR . rtree') ts
-
--- rtree (Node (RPrim p) _)  = error "diagrams-svgdom: invalid RPrim node"
+    r = concat <$> traverse rtree rs
 
 -- | Lens onto the size of the svg options.
 sizeSpec :: Lens' (Options AbSVG V2 n) (SizeSpec V2 n)
@@ -284,8 +234,8 @@ svgAttributes f opts =
 
 attributedRender :: SVGFloat n => Tree Element -> SvgRenderM n (Tree Element)
 attributedRender svg = do
-  SvgRenderState _idClip idFill idLine sty preT <- get
-  -- Environment sty preT <- ask
+  SvgRenderState _idClip idFill idLine <- get
+  Environment sty preT <- ask
   clippedSvg   <- renderSvgWithClipping preT svg sty
   lineGradDefs <- lineTextureDefs sty
   fillGradDefs <- fillTextureDefs sty
