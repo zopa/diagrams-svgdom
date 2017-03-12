@@ -38,6 +38,7 @@ module Diagrams.Backend.DOM
   , createTree
   ) where
 
+-- import           Control.Arrow
 import           Data.Map                 (Map)
 import qualified Data.Text                as T
 import           Data.Tree                (Tree)
@@ -107,12 +108,11 @@ domSvg (E.El t attrs) = do
 
 renderDom :: (MonadJSM m, IsDocument d, SVGFloat n, Monoid a, Semigroup a)
           => Options AbSVG V2 n -> QDiagram AbSVG V2 n a -> ReaderT d m Node
-renderDom o = createTree . renderDia AbSVG o
+renderDom o = fmap (fst . T.rootLabel) . createTree . renderDia AbSVG o
 
-createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m Node
-createTree (T.Node e []) = domSvg e
+createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree (Node,E.Element))
 createTree (T.Node e ts) = do
   e'  <- domSvg e
   ts' <- traverse createTree ts
-  _ <- traverse (appendChildUnchecked e' . Just) ts'
-  return e'
+  _ <- traverse (appendChildUnchecked e' . Just . fst . T.rootLabel) ts'
+  return $ T.Node (e',e) ts'
