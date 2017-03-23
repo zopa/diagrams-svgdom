@@ -36,6 +36,7 @@
 module Diagrams.Backend.DOM
   ( renderDom
   , createTree
+  , domSvg
   ) where
 
 -- import           Control.Arrow
@@ -66,9 +67,9 @@ import qualified Graphics.Svg.Abstract.Elements as E
 import           GHCJS.DOM.Document hiding (error)
 import           GHCJS.DOM.Element (setAttribute)
 import           GHCJS.DOM.Node
-import           GHCJS.DOM.Types hiding (Text)
+import           GHCJS.DOM.Types as DOM hiding (Text)
 
-domSvg :: (MonadJSM m, IsDocument d) => E.Element -> ReaderT d m Node
+domSvg :: (MonadJSM m, IsDocument d) => E.Element -> ReaderT d m DOM.Element
 domSvg (E.El t attrs) = do
     d <- ask
     e <- lift $ createElem d t
@@ -78,7 +79,8 @@ domSvg (E.El t attrs) = do
       E.Text txt -> do
         tn <- createTextNode d txt
         lift (appendChildUnsafe e tn)
-      _ -> return . toNode $ e
+        return e
+      _ -> return e
   where
     ns :: JSString
     ns = "http://www.w3.org/2000/svg"
@@ -107,12 +109,12 @@ domSvg (E.El t attrs) = do
     setAttribute' e a vs = setAttribute e (tag2text a) (T.intercalate " " vs)
 
 renderDom :: (MonadJSM m, IsDocument d, SVGFloat n, Monoid a, Semigroup a)
-          => Options AbSVG V2 n -> QDiagram AbSVG V2 n a -> ReaderT d m Node
-renderDom o = fmap (fst . T.rootLabel) . createTree . renderDia AbSVG o
+          => Options AbSVG V2 n -> QDiagram AbSVG V2 n a -> ReaderT d m DOM.Element
+renderDom o = fmap (T.rootLabel) . createTree . renderDia AbSVG o
 
-createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree (Node,E.Element))
+createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree DOM.Element)
 createTree (T.Node e ts) = do
   e'  <- domSvg e
   ts' <- traverse createTree ts
-  _ <- traverse (appendChildUnchecked e' . Just . fst . T.rootLabel) ts'
-  return $ T.Node (e',e) ts'
+  _ <- traverse (appendChildUnchecked e' . Just . T.rootLabel) ts'
+  return $ T.Node e' ts'
