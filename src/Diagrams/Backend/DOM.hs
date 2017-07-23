@@ -78,14 +78,14 @@ domSvg (E.El t attrs) = do
     case t of
       E.Text txt -> do
         tn <- createTextNode d txt
-        lift (appendChildUnsafe e tn)
+        lift (appendChild e tn)
         return e
       _ -> return e
   where
     ns :: JSString
     ns = "http://www.w3.org/2000/svg"
 
-    createElem d = createElementNSUnsafe d (Just ns) . Just . tagString
+    createElem d = createElementNS d (Just ns) . tagString
 
     attrs' :: Map JSString JSString
     attrs' = case t of
@@ -116,5 +116,5 @@ createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree 
 createTree (T.Node e ts) = do
   e'  <- domSvg e
   ts' <- traverse createTree ts
-  _ <- traverse (appendChildUnchecked e' . Just . T.rootLabel) ts'
+  _ <- traverse (appendChild e' . T.rootLabel) ts'
   return $ T.Node e' ts'
