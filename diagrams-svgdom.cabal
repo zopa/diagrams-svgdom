@@ -36,7 +36,7 @@ Library
                      , colour
                      , diagrams-core        >= 1.4   && < 1.5
                      , diagrams-lib         >= 1.4   && < 1.5
-                     , ghcjs-dom            == 0.9.*
+                     , ghcjs-dom            >= 0.8   && < 0.10
                      , JuicyPixels          >= 3.1.5 && < 3.3
                      , monoid-extras        >= 0.3   && < 0.5
                      , svg-builder          >= 0.1.2 && < 0.2
