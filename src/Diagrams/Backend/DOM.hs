@@ -64,21 +64,21 @@ import           Graphics.Svg.Abstract.Elements (Tag)
 import qualified Graphics.Svg.Abstract.Elements as E
 
 -- from ghcjs-dom
-import           GHCJS.DOM.Document hiding (error)
+import           GHCJS.DOM.Document
 import           GHCJS.DOM.Element (setAttribute)
 import           GHCJS.DOM.Node
 import           GHCJS.DOM.Types as DOM hiding (Text)
 
-domSvg :: (MonadJSM m, IsDocument d) => E.Element -> ReaderT d m DOM.Element
+domSvg :: (MonadJSM m, IsDocument d) => E.Element -> ReaderT d m DOM.SVGElement
 domSvg (E.El t attrs) = do
     d <- ask
-    e <- lift $ createElem d t
+    e <- fmap (uncheckedCastTo SVGElement) . lift $ createElem d t
     itraverse_ (setAttribute' e) attrs
     itraverse_ (setAttribute e) attrs'
     case t of
       E.Text txt -> do
         tn <- createTextNode d txt
-        lift (appendChild e tn)
+        _  <- lift (appendChild e tn)
         return e
       _ -> return e
   where
@@ -109,10 +109,10 @@ domSvg (E.El t attrs) = do
     setAttribute' e a vs = setAttribute e (tag2text a) (T.intercalate " " vs)
 
 renderDom :: (MonadJSM m, IsDocument d, SVGFloat n, Monoid a, Semigroup a)
-          => Options AbSVG V2 n -> QDiagram AbSVG V2 n a -> ReaderT d m DOM.Element
+          => Options AbSVG V2 n -> QDiagram AbSVG V2 n a -> ReaderT d m DOM.SVGElement
 renderDom o = fmap (T.rootLabel) . createTree . renderDia AbSVG o
 
-createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree DOM.Element)
+createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree DOM.SVGElement)
 createTree (T.Node e ts) = do
   e'  <- domSvg e
   ts' <- traverse createTree ts
