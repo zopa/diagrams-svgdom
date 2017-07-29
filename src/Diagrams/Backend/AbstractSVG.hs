@@ -99,12 +99,6 @@ type B = AbSVG
 type instance V AbSVG = V2
 type instance N AbSVG = Double
 
-instance Show (RNode b v n a) where
-  show (RPrim _) = "RPrim"
-  show (RAnnot _) = "RAnnot"
-  show REmpty = "REmpty"
-  show (RStyle s) = "RStyle " ++ show s
-
 data Environment n = Environment
   { _style :: Style V2 n
   , __pre :: T.Text
