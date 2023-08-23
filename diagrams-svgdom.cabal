@@ -26,24 +26,24 @@ Library
                        Graphics.Rendering.AbstractSVG
                        Graphics.Svg.Abstract.Elements
   Hs-source-dirs:      src
-  Build-depends:       base                 >= 4.3   && < 4.10
+  Build-depends:       base                 >= 4.3   && < 4.19
                      , filepath
-                     , mtl                  >= 1     && < 2.3
+                     , mtl                  >= 1     && < 2.4
                      , bytestring           >= 0.9   && < 1.0
-                     , base64-bytestring    >= 1     && < 1.1
+                     , base64-bytestring    >= 1     && < 1.3
                      , colour
-                     , diagrams-core        >= 1.4   && < 1.5
-                     , diagrams-lib         >= 1.4   && < 1.5
-                     , ghcjs-dom            >= 0.7   && < 0.8
-                     , JuicyPixels          >= 3.1.5 && < 3.3
-                     , monoid-extras        >= 0.3   && < 0.5
+                     , diagrams-core        >= 1.4   && < 1.6
+                     , diagrams-lib         >= 1.4   && < 1.6
+                     , ghcjs-dom            >= 0.8   && < 0.10
+                     , JuicyPixels          >= 3.1.5 && < 3.4
+                     , monoid-extras        >= 0.3   && < 0.7
                      , svg-builder          >= 0.1.2 && < 0.2
-                     , text                 >= 0.11  && < 1.3
+                     , text                 >= 0.11  && < 2.1
                      , split                >= 0.1.2 && < 0.3
-                     , containers           >= 0.3   && < 0.6
-                     , lens                 >= 4.0   && < 4.16
-                     , hashable             >= 1.1   && < 1.3
-                     , semigroups           >= 0.13  && < 0.19
+                     , containers           >= 0.3   && < 0.7
+                     , lens                 >= 4.0   && < 5.3
+                     , hashable             >= 1.1   && < 1.5
+                     , semigroups           >= 0.13  && < 0.21
                      , unordered-containers >= 0.2   && < 0.3
 
   Ghc-options:         -Wall

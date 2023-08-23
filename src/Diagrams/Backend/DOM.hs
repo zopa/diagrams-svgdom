@@ -63,7 +63,7 @@ import           Graphics.Svg.Abstract.Elements (Tag)
 import qualified Graphics.Svg.Abstract.Elements as E
 
 -- from ghcjs-dom
-import           GHCJS.DOM.Document hiding (error)
+import           GHCJS.DOM.Document
 import           GHCJS.DOM.Element (setAttribute)
 import           GHCJS.DOM.Node
 import           GHCJS.DOM.Types hiding (Text)
@@ -77,13 +77,13 @@ domSvg (E.El t attrs) = do
     case t of
       E.Text txt -> do
         tn <- createTextNode d txt
-        lift (appendChildUnsafe e tn)
+        lift (appendChild e tn)
       _ -> return . toNode $ e
   where
     ns :: JSString
     ns = "http://www.w3.org/2000/svg"
 
-    createElem d = createElementNSUnsafe d (Just ns) . Just . tagString
+    createElem d = createElementNS d (Just ns) . tagString
 
     attrs' :: Map JSString JSString
     attrs' = case t of
@@ -114,5 +114,5 @@ createTree :: (MonadJSM m, IsDocument d) => Tree E.Element -> ReaderT d m (Tree 
 createTree (T.Node e ts) = do
   e'  <- domSvg e
   ts' <- traverse createTree ts
-  _ <- traverse (appendChildUnchecked e' . Just . fst . T.rootLabel) ts'
+  _ <- traverse (appendChild e' . fst . T.rootLabel) ts'
   return $ T.Node (e',e) ts'
