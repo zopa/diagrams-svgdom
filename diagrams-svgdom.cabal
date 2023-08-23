@@ -1,5 +1,5 @@
 Name:                diagrams-svgdom
-Version:             1.4.2
+Version:             1.4.3
 Synopsis:            Backend for diagrams that outputs ghcjs-dom transformations
 Homepage:            http://projects.haskell.org/diagrams/
 License:             BSD3
